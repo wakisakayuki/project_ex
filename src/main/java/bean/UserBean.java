@@ -1,17 +1,15 @@
-package model.entity;
-
-import java.time.LocalDate;
+package bean;
 
 public class UserBean {
-	private String userId;
-	private String password;
-	private String userName;
-	private LocalDate updateDateTime;
-	public LocalDate getUpdateDateTime() {
-		return updateDateTime;
+	private int userCode ;
+	private String userId ;
+	private String password ;
+	private String userName ;
+	public int getUserCode() {
+		return userCode;
 	}
-	public void setUpdateDateTime(LocalDate updateDateTime) {
-		this.updateDateTime = updateDateTime;
+	public void setUserCode(int userCode) {
+		this.userCode = userCode;
 	}
 	public String getUserId() {
 		return userId;
@@ -31,4 +29,5 @@ public class UserBean {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+	
 }
