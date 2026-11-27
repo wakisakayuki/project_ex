@@ -1,27 +1,15 @@
 package model.entity;
 
-import java.time.LocalDate;
+import java.sql.Timestamp;
 
 public class CategoryBean {
-	private int categoryId;
-	private String categoryName;
-	private LocalDate updateDateTime;
-	public int getCategoryId() {
-		return categoryId;
-	}
-	public void setCategoryId(int categoryId) {
-		this.categoryId = categoryId;
-	}
-	public String getCategoryName() {
-		return categoryName;
-	}
-	public void setCategoryName(String categoryName) {
-		this.categoryName = categoryName;
-	}
-	public LocalDate getUpdateDateTime() {
-		return updateDateTime;
-	}
-	public void setUpdateDateTime(LocalDate updateDateTime) {
-		this.updateDateTime = updateDateTime;
-	}
+    private int categoryId;
+    private String categoryName;
+    private Timestamp updateDateTime;
+    public int getCategoryId() { return categoryId; }
+    public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+    public Timestamp getUpdateDateTime() { return updateDateTime; }
+    public void setUpdateDateTime(Timestamp updateDateTime) { this.updateDateTime = updateDateTime; }
 }
