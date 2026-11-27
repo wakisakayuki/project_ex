@@ -11,6 +11,13 @@ public class TaskBean {
 	private String userId;
 	private String userName;
 	private char statusCode;
+	private String statusName;
+	public String getStatusName() {
+		return statusName;
+	}
+	public void setStatusName(String statusName) {
+		this.statusName = statusName;
+	}
 	private String memo;
 	private LocalDate createDateTime;
 	private LocalDate updateDateTime;
