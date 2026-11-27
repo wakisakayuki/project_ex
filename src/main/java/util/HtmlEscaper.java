@@ -1,6 +1,10 @@
 package util;
+/**
+ * 画面出力時にHTML特殊文字をエスケープするユーティリティ。
+ */
 
 public final class HtmlEscaper {
+
     private HtmlEscaper() {
     }
 
@@ -8,12 +12,11 @@ public final class HtmlEscaper {
         if (value == null) {
             return "";
         }
-
         return String.valueOf(value)
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;");
     }
 }
