@@ -1,9 +1,129 @@
 package servlet;
-import java.io.IOException;import java.sql.SQLException;import java.time.LocalDate;import javax.servlet.*;import javax.servlet.annotation.WebServlet;import javax.servlet.http.*;import model.dao.*;import model.entity.*;import util.WebSupport;
-@WebServlet(urlPatterns={"/task-edit-servlet","/task-edit-result-servlet"}) public class TaskEditServlet extends HttpServlet {private static final long serialVersionUID=1L;@Override protected void doGet(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{p.sendRedirect(WebSupport.path(q,"/task-list"));}@Override protected void doPost(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{q.setCharacterEncoding("UTF-8");String path=q.getServletPath();if(path.endsWith("task-edit-servlet")){if("1".equals(q.getParameter("returnToEdit")))returnToEdit(q,p);else show(q,p);return;}update(q,p);}
- private void show(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{int id=WebSupport.positiveInt(q.getParameter("task_id"));try{TaskBean b=new TaskDAO().findByIdAndUserId(id,WebSupport.userId(q));if(b==null){WebSupport.error(q,"E010");WebSupport.forward(q,p,"task-edit-failure.jsp");return;}q.setAttribute("task",b);q.setAttribute("categories",new CategoryDAO().selectAllCategory());q.setAttribute("statuses",new StatusDAO().selectAllStatus());WebSupport.forward(q,p,"task-edit.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");WebSupport.forward(q,p,"task-edit-failure.jsp");}}
- private void returnToEdit(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{TaskBean b=read(q);q.setAttribute("task",b);try{q.setAttribute("categories",new CategoryDAO().selectAllCategory());q.setAttribute("statuses",new StatusDAO().selectAllStatus());WebSupport.forward(q,p,"task-edit.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");WebSupport.forward(q,p,"task-edit-failure.jsp");}}
- private TaskBean read(HttpServletRequest q){TaskBean b=new TaskBean();b.setTaskId(WebSupport.positiveInt(q.getParameter("task_id")));b.setTaskName(q.getParameter("taskName"));b.setMemo(q.getParameter("memo"));b.setStatusCode(q.getParameter("statusCode"));try{b.setCategoryId(Integer.parseInt(q.getParameter("categoryId")));}catch(Exception e){b.setCategoryId(-1);}try{String d=q.getParameter("limitDate");b.setLimitDate(d==null||d.isBlank()?null:LocalDate.parse(d));}catch(Exception e){q.setAttribute("invalidDate",true);}return b;}
- private void update(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{TaskBean b=read(q);String err=null;if(b.getTaskId()<1)err="E012";else if(!WebSupport.required(b.getTaskName()))err="E001";else if(b.getTaskName().trim().length()>50||(b.getMemo()!=null&&b.getMemo().length()>100))err="E002";else if(Boolean.TRUE.equals(q.getAttribute("invalidDate"))||b.getCategoryId()<1||b.getStatusCode()==null)err="E003";else if(b.getLimitDate()!=null&&b.getLimitDate().isBefore(LocalDate.now()))err="E004";
- try{if(err==null){if(!new CategoryDAO().selectAllCategory().stream().anyMatch(x->x.getCategoryId()==b.getCategoryId())||!new StatusDAO().exists(b.getStatusCode()))err="E003";}if(err!=null){WebSupport.error(q,err);q.setAttribute("task",b);q.setAttribute("categories",new CategoryDAO().selectAllCategory());q.setAttribute("statuses",new StatusDAO().selectAllStatus());WebSupport.forward(q,p,"task-edit-failure.jsp");return;}int n=new TaskDAO().updateByIdAndUserId(b,WebSupport.userId(q));if(n!=1){WebSupport.error(q,"E010");WebSupport.forward(q,p,"task-edit-failure.jsp");return;}q.setAttribute("task",new TaskDAO().findById(b.getTaskId()));q.setAttribute("message",WebSupport.message("I002"));WebSupport.forward(q,p,"task-edit-success.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");q.setAttribute("task",b);WebSupport.forward(q,p,"task-edit-failure.jsp");}}
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import model.dao.*;
+import model.entity.*;
+import util.WebSupport;
+
+/**
+ * タスク編集画面の表示と更新処理を担当するサーブレット。
+ */
+@WebServlet(urlPatterns = {
+    "/task-edit-servlet", "/task-edit-result-servlet"
+}) public class TaskEditServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    @Override protected void doGet(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        p.sendRedirect(WebSupport.path(q, "/task-list"));
+    }
+    @Override protected void doPost(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        q.setCharacterEncoding("UTF-8");
+        String path = q.getServletPath();
+        if (path.endsWith("task-edit-servlet")) {
+            if ("1".equals(q.getParameter("returnToEdit"))) return ToEdit(q, p);
+            else show(q, p);
+            return;
+        }
+        update(q, p);
+    }
+
+    private void show(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        int id = WebSupport.positiveInt(q.getParameter("task_id"));
+        try {
+            TaskBean b = new TaskDAO().findByIdAndUserId(id, WebSupport.userId(q));
+            if (b == null) {
+                WebSupport.error(q, "E010");
+                WebSupport.forward(q, p, "task-edit-failure.jsp");
+                return;
+            }
+            q.setAttribute("task", b);
+            q.setAttribute("categories", new CategoryDAO().selectAllCategory());
+            q.setAttribute("statuses", new StatusDAO().selectAllStatus());
+            WebSupport.forward(q, p, "task-edit.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            WebSupport.forward(q, p, "task-edit-failure.jsp");
+        }
+    }
+
+    private void return ToEdit(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        TaskBean b = read(q);
+        q.setAttribute("task", b);
+        try {
+            q.setAttribute("categories", new CategoryDAO().selectAllCategory());
+            q.setAttribute("statuses", new StatusDAO().selectAllStatus());
+            WebSupport.forward(q, p, "task-edit.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            WebSupport.forward(q, p, "task-edit-failure.jsp");
+        }
+    }
+
+    private TaskBean read(HttpServletRequest q) {
+        TaskBean b = new TaskBean();
+        b.setTaskId(WebSupport.positiveInt(q.getParameter("task_id")));
+        b.setTaskName(q.getParameter("taskName"));
+        b.setMemo(q.getParameter("memo"));
+        b.setStatusCode(q.getParameter("statusCode"));
+        try {
+            b.setCategoryId(Integer.parseInt(q.getParameter("categoryId")));
+        }
+        catch (Exception e) {
+            b.setCategoryId(-1);
+        }
+        try {
+            String d = q.getParameter("limitDate");
+            b.setLimitDate(d == null || d.isBlank() ? null : LocalDate.parse(d));
+        }
+        catch (Exception e) {
+            q.setAttribute("invalidDate", true);
+        }
+        return b;
+    }
+
+    private void update(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        TaskBean b = read(q);
+        String err = null;
+        if (b.getTaskId()<1) err = "E012";
+        else if (!WebSupport.required(b.getTaskName())) err = "E001";
+        else if (b.getTaskName().trim().length()>50 || (b.getMemo() != null && b.getMemo().length()>100)) err = "E002";
+        else if (Boolean.TRUE.equals(q.getAttribute("invalidDate")) || b.getCategoryId()<1 || b.getStatusCode() == null) err = "E003";
+        else if (b.getLimitDate() != null && b.getLimitDate().isBefore(LocalDate.now())) err = "E004";
+        try {
+            if (err == null) {
+                if (!new CategoryDAO().selectAllCategory().stream().anyMatch(x-> x.getCategoryId() == b.getCategoryId()) || !new StatusDAO().exists(b.getStatusCode())) err = "E003";
+            }
+            if (err != null) {
+                WebSupport.error(q, err);
+                q.setAttribute("task", b);
+                q.setAttribute("categories", new CategoryDAO().selectAllCategory());
+                q.setAttribute("statuses", new StatusDAO().selectAllStatus());
+                WebSupport.forward(q, p, "task-edit-failure.jsp");
+                return;
+            }
+            int n = new TaskDAO().updateByIdAndUserId(b, WebSupport.userId(q));
+            if (n != 1) {
+                WebSupport.error(q, "E010");
+                WebSupport.forward(q, p, "task-edit-failure.jsp");
+                return;
+            }
+            q.setAttribute("task", new TaskDAO().findById(b.getTaskId()));
+            q.setAttribute("message", WebSupport.message("I002"));
+            WebSupport.forward(q, p, "task-edit-success.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            q.setAttribute("task", b);
+            WebSupport.forward(q, p, "task-edit-failure.jsp");
+        }
+    }
 }

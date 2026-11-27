@@ -1,5 +1,35 @@
 package servlet;
-import java.io.IOException;import java.sql.SQLException;import javax.servlet.*;import javax.servlet.annotation.WebServlet;import javax.servlet.http.*;import model.dao.TaskDAO;import util.WebSupport;
-@WebServlet("/task-list") public class TaskListServlet extends HttpServlet {private static final long serialVersionUID=1L;@Override protected void doGet(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{load(q,p);}@Override protected void doPost(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{load(q,p);}
- private void load(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{try{q.setAttribute("tasks",new TaskDAO().findByUserIdOrderByLimitDate(WebSupport.userId(q)));WebSupport.forward(q,p,"task-list.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");q.setAttribute("tasks",java.util.Collections.emptyList());WebSupport.forward(q,p,"task-list.jsp");}}
+
+import java.io.IOException;
+import java.sql.SQLException;
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import model.dao.TaskDAO;
+import util.WebSupport;
+
+/**
+ * ログインユーザーのタスク一覧を期限順で表示するサーブレット。
+ */
+@WebServlet("/task-list") public class TaskListServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    @Override protected void doGet(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        load(q, p);
+    }
+    @Override protected void doPost(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        load(q, p);
+    }
+
+    private void load(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        try {
+            q.setAttribute("tasks", new TaskDAO().findByUserIdOrderByLimitDate(WebSupport.userId(q)));
+            WebSupport.forward(q, p, "task-list.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            q.setAttribute("tasks", java.util.Collections.emptyList());
+            WebSupport.forward(q, p, "task-list.jsp");
+        }
+    }
 }

@@ -1,8 +1,113 @@
 package servlet;
-import java.io.IOException;import java.sql.SQLException;import java.util.*;import javax.servlet.*;import javax.servlet.annotation.WebServlet;import javax.servlet.http.*;import model.dao.TaskDAO;import model.entity.TaskBean;import service.TaskDeletionService;import util.WebSupport;
-@WebServlet(urlPatterns={"/task-delete-confirm-servlet","/task-delete-result-servlet"}) public class TaskDeleteConfirmServlet extends HttpServlet {private static final long serialVersionUID=1L;@Override protected void doGet(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{p.sendRedirect(WebSupport.path(q,"/task-list"));}@Override protected void doPost(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{q.setCharacterEncoding("UTF-8");if(q.getServletPath().endsWith("task-delete-result-servlet"))execute(q,p);else preview(q,p);}
- private List<Integer> ids(HttpServletRequest q){String[] values=q.getParameterValues("task_ids");if(values==null)return Collections.emptyList();List<Integer> ids=new ArrayList<>();for(String v:values){int id=WebSupport.positiveInt(v);if(id<1||ids.contains(id))return null;ids.add(id);}Collections.sort(ids);return ids;}
- private void preview(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{List<Integer> ids=ids(q);if(ids==null||ids.isEmpty()){WebSupport.error(q,"E006");list(q,p);return;}try{List<TaskBean> tasks=new ArrayList<>();TaskDAO d=new TaskDAO();for(Integer id:ids){TaskBean b=d.findByIdAndUserId(id,WebSupport.userId(q));if(b==null){WebSupport.error(q,"E010");list(q,p);return;}tasks.add(b);}q.setAttribute("tasks",tasks);q.setAttribute("taskIds",ids);q.setAttribute("message",WebSupport.message("C001"));WebSupport.forward(q,p,"task-delete-confirm.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");list(q,p);}}
- private void execute(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{List<Integer> ids=ids(q);if(ids==null||ids.isEmpty()){WebSupport.error(q,"E006");list(q,p);return;}try{List<TaskBean> deleted=new TaskDeletionService().deleteTasks(ids,WebSupport.userId(q));q.setAttribute("deletedTasks",deleted);q.setAttribute("message",WebSupport.message("I003"));WebSupport.forward(q,p,"task-delete-success.jsp");}catch(SecurityException e){WebSupport.error(q,"E010");list(q,p);}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"02000".equals(e.getSQLState())?"E012":"E013");list(q,p);}catch(IllegalArgumentException e){WebSupport.error(q,"E006");list(q,p);}}
- private void list(HttpServletRequest q,HttpServletResponse p)throws ServletException,IOException{try{q.setAttribute("tasks",new TaskDAO().findByUserIdOrderByLimitDate(WebSupport.userId(q)));WebSupport.forward(q,p,"task-list.jsp");}catch(SQLException e){WebSupport.log(getServletContext(),e);WebSupport.error(q,"E013");WebSupport.forward(q,p,"task-list.jsp");}}
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import model.dao.TaskDAO;
+import model.entity.TaskBean;
+import service.TaskDeletionService;
+import util.WebSupport;
+
+/**
+ * タスク削除の確認と削除処理を受け付けるサーブレット。
+ */
+@WebServlet(urlPatterns = {
+    "/task-delete-confirm-servlet", "/task-delete-result-servlet"
+}) public class TaskDeleteConfirmServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    @Override protected void doGet(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        p.sendRedirect(WebSupport.path(q, "/task-list"));
+    }
+    @Override protected void doPost(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        q.setCharacterEncoding("UTF-8");
+        if (q.getServletPath() .endsWith("task-delete-result-servlet")) execute(q, p);
+        else preview(q, p);
+    }
+
+    private List<Integer> ids(HttpServletRequest q) {
+        String[] values = q.getParameterValues("task_ids");
+        if (values == null) return Collections.emptyList();
+        List<Integer> ids = new ArrayList<>();
+        for (String v : values) {
+            int id = WebSupport.positiveInt(v);
+            if (id<1 || ids.contains(id)) return null;
+            ids.add(id);
+        }
+        Collections.sort(ids);
+        return ids;
+    }
+
+    private void preview(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        List<Integer> ids = ids(q);
+        if (ids == null || ids.isEmpty()) {
+            WebSupport.error(q, "E006");
+            list(q, p);
+            return;
+        }
+        try {
+            List<TaskBean> tasks = new ArrayList<>();
+            TaskDAO d = new TaskDAO();
+            for (Integer id : ids) {
+                TaskBean b = d.findByIdAndUserId(id, WebSupport.userId(q));
+                if (b == null) {
+                    WebSupport.error(q, "E010");
+                    list(q, p);
+                    return;
+                }
+                tasks.add(b);
+            }
+            q.setAttribute("tasks", tasks);
+            q.setAttribute("taskIds", ids);
+            q.setAttribute("message", WebSupport.message("C001"));
+            WebSupport.forward(q, p, "task-delete-confirm.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            list(q, p);
+        }
+    }
+
+    private void execute(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        List<Integer> ids = ids(q);
+        if (ids == null || ids.isEmpty()) {
+            WebSupport.error(q, "E006");
+            list(q, p);
+            return;
+        }
+        try {
+            List<TaskBean> deleted = new TaskDeletionService().deleteTasks(ids, WebSupport.userId(q));
+            q.setAttribute("deletedTasks", deleted);
+            q.setAttribute("message", WebSupport.message("I003"));
+            WebSupport.forward(q, p, "task-delete-success.jsp");
+        }
+        catch (SecurityException e) {
+            WebSupport.error(q, "E010");
+            list(q, p);
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "02000".equals(e.getSQLState()) ? "E012" : "E013");
+            list(q, p);
+        }
+        catch (IllegalArgumentException e) {
+            WebSupport.error(q, "E006");
+            list(q, p);
+        }
+    }
+
+    private void list(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+        try {
+            q.setAttribute("tasks", new TaskDAO().findByUserIdOrderByLimitDate(WebSupport.userId(q)));
+            WebSupport.forward(q, p, "task-list.jsp");
+        }
+        catch (SQLException e) {
+            WebSupport.log(getServletContext(), e);
+            WebSupport.error(q, "E013");
+            WebSupport.forward(q, p, "task-list.jsp");
+        }
+    }
 }
