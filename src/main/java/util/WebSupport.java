@@ -1,13 +1,12 @@
 package util;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
-/**
- * 文字コード設定やJSPへの転送など、Web共通処理を提供するクラス。
- */
+/** Web共通処理を提供するクラス。 */
 public final class WebSupport {
     private static final Map<String, String> MESSAGES = new HashMap<>();
     static {
@@ -25,6 +24,7 @@ public final class WebSupport {
         MESSAGES.put("E012", "対象のデータが見つかりませんでした。");
         MESSAGES.put("E013", "ページを表示できません。");
         MESSAGES.put("E014", "ログイン状態ではありません。ログインしてください。");
+        MESSAGES.put("E015", "ログインに必要なデータベース処理に失敗しました。接続設定を確認してください。");
         MESSAGES.put("I001", "タスクを登録しました。");
         MESSAGES.put("I002", "タスクを編集しました。");
         MESSAGES.put("I003", "タスクを削除しました。");
@@ -33,50 +33,48 @@ public final class WebSupport {
         MESSAGES.put("I004", "担当者本人のみ編集可能です。");
         MESSAGES.put("I005", "コメント投稿者本人のみ編集・削除可能です。");
     }
-
-    private WebSupport() {
-    }
-
+    private WebSupport() {}
     public static String message(String id) {
         return MESSAGES.getOrDefault(id, "ページを表示できません。");
     }
-
     public static void error(HttpServletRequest req, String id) {
         req.setAttribute("messageId", id);
         req.setAttribute("message", message(id));
     }
-
     public static String userId(HttpServletRequest req) {
         HttpSession s = req.getSession(false);
         return s == null ? null : (String) s.getAttribute("user_id");
     }
-
     public static String path(HttpServletRequest req, String p) {
-        return req.getContextPath()+p;
+        return req.getContextPath() + p;
     }
-
     public static int positiveInt(String value) {
         try {
             int n = Integer.parseInt(value);
-            return n>0 ? n : -1;
-        }
-        catch (Exception e) {
+            return n > 0 ? n : -1;
+        } catch (Exception e) {
             return -1;
         }
     }
-
     public static void log(ServletContext c, Exception e) {
-        c.log("タスク管理システム処理エラー", e);
+        String summary = "タスク管理システム処理エラー: " + e.getClass().getName();
+        if (e instanceof SQLException) {
+            SQLException sqlException = (SQLException) e;
+            summary += " [SQLState=" + sqlException.getSQLState()
+                    + ", ErrorCode=" + sqlException.getErrorCode() + "]";
+        }
+        c.log(summary, e);
+        // Eclipseでも例外本文と原因を確認できるように出力する。
+        System.err.println(summary);
+        e.printStackTrace(System.err);
     }
-
-    public static void forward(HttpServletRequest r, HttpServletResponse s, String jsp) throws ServletException, IOException {
-        r.getRequestDispatcher("/WEB-INF/jsp/"+jsp).forward(r, s);
+    public static void forward(HttpServletRequest r, HttpServletResponse s, String jsp)
+            throws ServletException, IOException {
+        r.getRequestDispatcher("/WEB-INF/jsp/" + jsp).forward(r, s);
     }
-
     public static boolean required(String s) {
         return s != null && !s.trim().isEmpty();
     }
-
     public static boolean max(String s, int n) {
         return s == null || s.length() <= n;
     }
