@@ -24,7 +24,7 @@ import util.WebSupport;
         q.setCharacterEncoding("UTF-8");
         String path = q.getServletPath();
         if (path.endsWith("task-edit-servlet")) {
-            if ("1".equals(q.getParameter("returnToEdit"))) return ToEdit(q, p);
+            if ("1".equals(q.getParameter("returnToEdit"))) returnToEdit(q, p);
             else show(q, p);
             return;
         }
@@ -52,7 +52,7 @@ import util.WebSupport;
         }
     }
 
-    private void return ToEdit(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
+    private void returnToEdit(HttpServletRequest q, HttpServletResponse p) throws ServletException, IOException {
         TaskBean b = read(q);
         q.setAttribute("task", b);
         try {
