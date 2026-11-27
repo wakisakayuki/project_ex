@@ -1,3 +1,3 @@
-<%@ tag body-content="empty" %>
+<%@ tag body-content="empty" import="util.HtmlEscaper" %>
 <%@ attribute name="value" required="false" type="java.lang.Object" %>
-<%@ page import="util.HtmlEscaper" %><% out.write(HtmlEscaper.escape(value)); %>
+<% out.write(HtmlEscaper.escape(value)); %>
