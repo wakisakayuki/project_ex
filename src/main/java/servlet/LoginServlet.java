@@ -56,7 +56,8 @@ import util.WebSupport;
         }
         catch (SQLException e) {
             WebSupport.log(getServletContext(), e);
-            WebSupport.error(q, "E013");
+            WebSupport.error(q, "E015");
+            q.setAttribute("userId", id.trim());
             WebSupport.forward(q, p, "login.jsp");
         }
     }
